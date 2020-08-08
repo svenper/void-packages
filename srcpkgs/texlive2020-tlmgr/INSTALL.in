@@ -1,0 +1,9 @@
+case "${ACTION}" in
+post)
+	case "${UPDATE}" in
+	no)
+		_year=$(echo ${VERSION} | cut -c -4)
+		cd opt/texlive${_year}-installer
+		./install-tl -profile void.profile @@NATIVEBIN@@
+	esac
+esac

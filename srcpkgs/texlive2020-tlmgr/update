@@ -1,0 +1,2 @@
+site="https://tug.org/texlive"
+pattern="Current release: TeX Live \K[0-9]{4}"

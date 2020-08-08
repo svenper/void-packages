@@ -1,0 +1,29 @@
+--- install-tl-20200406/install-tl
++++ install-tl-20200406/install-tl
+@@ -718,14 +718,7 @@ sub final_remote_init {
+ 
+   info("Platform: ", platform(), " => \'", platform_desc(platform), "\'\n");
+   if ($opt_custom_bin) {
+-    if (-d $opt_custom_bin && (-r "$opt_custom_bin/kpsewhich"
+-                               || -r "$opt_custom_bin/kpsewhich.exe")) {
+-      info("Platform overridden, binaries taken from $opt_custom_bin\n"
+-           . "and will be installed into .../bin/custom.\n");
+-    } else {
+-      tldie("$0: -custom-bin argument must be a directory "
+-            . "with TeX Live binaries, not like: $opt_custom_bin\n");
+-    }
++    info("Platform overridden, binaries will be installed by xbps.\n");
+   }
+   if ($media eq "local_uncompressed") {
+     info("Distribution: live (uncompressed)\n");
+@@ -841,10 +834,6 @@ sub do_installation {
+     if ($opt_custom_bin) {
+       $vars{'this_platform'} = "custom";
+       my $TEXDIR="$vars{'TEXDIR'}";
+-      mkdirhier("$TEXDIR/bin/custom");
+-      for my $f (<$opt_custom_bin/*>) {
+-        copy($f, "$TEXDIR/bin/custom");
+-      }
+     }
+   }
+   # now we save every scheme that is fully covered by the stuff we have

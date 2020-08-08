@@ -1,0 +1,47 @@
+- The way TeX Live is distributed by XBPS has changed. Native binaries
+  for your architecture are installed with the texlive@@VERSION@@-exec
+  package, but if you are on an architecture supported by tlmgr and want
+  things to work like before, the tlmgr provided binaries can be
+  installed as well with:
+
+  # tlmgr platform add [x86_64|i386|armel|armhf|powerpc]-linux
+  # tlmgr platform set [x86_64|i386|armel|armhf|powerpc]-linux
+
+  This change can also be undone later with:
+
+  # tlmgr platform set custom
+  # tlmgr platform remove [x86_64|i386|armel|armhf|powerpc]-linux
+
+  Your path should be updated automatically on session reload from
+  /etc/profile.d/texlive.sh
+
+- By default the basic scheme is installed. You can easily install the
+  other schemes with tlmgr, as collection-small, collection-medium and
+  collection-full, respectively.
+
+- See http://www.tug.org/texlive/quickinstall.html for installation
+  details. The location of TeX Live binaries is set in the file:
+
+  /etc/profile.d/texlive.sh
+
+  It is set by xbps-alternatives. If you want to use another installed
+  version, do not overwrite the file, but use xbps-alternatives. Verify
+  if it is set correctly with:
+
+  $ env | grep ^PATH
+
+- TeX Live is free software, see the files:
+
+  /usr/share/licenses/@@PKGNAME@@/LICENSE.TL
+  /usr/share/licenses/@@PKGNAME@@/LICENSE.CTAN
+
+- To update or install packages for your TeX Live installation, use:
+
+  /opt/texlive/@@VERSION@@/bin/@@ARCH@@/tlmgr
+
+  For details and documentation, see:
+
+  http://www.tug.org/texlive/doc/tlmgr.html#EXAMPLES
+
+- WARNING: To avoid messing up your TeX Live installation, DON'T use
+  the installation scripts in /opt/texlive@@VERSION@@-installer

@@ -1,0 +1,15 @@
+# This script will clear the TeX Live directory.
+# Find all files that don't belong to -exec pkg, except in texmf-local which is for users.
+case "${ACTION}" in
+post)
+	_year=$(echo ${VERSION} | cut -c -4)
+	find /opt/texlive/${_year}/bin -mindepth 1 -maxdepth 1 ! -name ${ARCH} -exec rm -rf {} \;
+	find /opt/texlive/${_year}     -mindepth 1 -maxdepth 1 ! -name bin     -exec rm -rf {} \;
+	if [ "$(find /opt/texlive/texmf-local -type f)" = "/opt/texlive/texmf-local/ls-R" -o \
+	     "$(find /opt/texlive/texmf-local -type f)" = "" ]; then
+		rm -r /opt/texlive/texmf-local
+	fi
+	rmdir -p /opt/texlive/${_year}/bin
+	rmdir -p /opt/texlive/${_year}
+	;;
+esac

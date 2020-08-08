@@ -1,0 +1,2817 @@
+# Template file for 'texlive2020-exec'
+pkgname=texlive2020-exec
+version=2020.0
+revision=1
+_year="${version:0:4}"
+# these refer to the release version of poppler, not libpoppler
+_poppler_epdf_version="0.86.0"
+_poppler_src_version="0.83.0"
+_poppler_void_version="0.87.0"
+build_wrksrc="${XBPS_BUILDDIR}/${pkgname}-${version}/Work"
+build_style="gnu-configure"
+short_desc="Executables meant to be used with texlive${_year}-tlmgr"
+maintainer="svenper <svenper@tuta.io>"
+license="GPL-2"
+homepage="http://tug.org/texlive/"
+changelog="https://raw.githubusercontent.com/TeX-Live/texlive-source/master/ChangeLog"
+# use official git mirror to enable cached distfile ( https://www.tug.org/texlive/doc/tlbuild.html#Continuous-integration )
+distfiles="https://github.com/TeX-Live/texlive-source/archive/tags/texlive-${version}.tar.gz"
+checksum=c41d1ffcadb44fc25a08e2f8ed26ecbd011190d94afc46fce1457c872d4b22b9
+
+# not complete modularity yet, only the most troublesome for convenience
+build_options="asymptote dvisvgm xetex xindy"
+build_options_default="${build_options}"
+desc_option_asymptote="Enable asymptote"
+desc_option_dvisvgm="Enable dvisvgm"
+desc_option_xetex="Enable xetex"
+desc_option_xindy="Enable xindy"
+
+#depends+=" ${pkgname}-scheme-infraonly"
+hostmakedepends+=" pkg-config bison flex" # curl for git revision autogen
+hostmakedepends+=" autoconf automake gettext libtool" # for reautoconf
+hostmakedepends+=" texinfo" # ???
+
+
+# clipper is modified by upstream from http://www.angusj.com/delphi/clipper.php
+# variant is modified by upstream from https://github.com/mpark/variant
+# ttfautohint is still in development
+makedepends+=" clipper-devel fontforge ttfautohint brotli-devel woff2-devel xxHash-devel libressl-devel"
+configure_args+=" --enable-bundled-libs=no"
+configure_args+=" --disable-bundled-libs"
+configure_args+=" --with-ttfautohint=/usr"
+configure_args+=" --with-ttfautohint-includes=/usr/include"
+configure_args+=" --with-ttfautohint-libdir=/usr/lib"
+
+
+configure_args+=" --with-system-cairo"      ; makedepends+=" cairo-devel"
+configure_args+=" --with-system-freetype2"  ; makedepends+=" freetype-devel"
+configure_args+=" --with-system-gd"         ; makedepends+=" gd-devel"
+configure_args+=" --with-system-gmp"        ; makedepends+=" gmp-devel"
+configure_args+=" --with-system-graphite"   ; makedepends+=" graphite-devel"
+configure_args+=" --with-system-harfbuzz"   ; makedepends+=" harfbuzz-devel"
+configure_args+=" --with-system-icu"        ; makedepends+=" icu-devel"
+configure_args+=" --with-system-libpaper"   ; makedepends+=" libpaper-devel"
+configure_args+=" --with-system-libpng"     ; makedepends+=" libpng-devel"
+configure_args+=" --with-system-mpfr"       ; makedepends+=" mpfr-devel"
+configure_args+=" --with-system-pixman"     ; makedepends+=" pixman-devel"
+configure_args+=" --with-system-poppler"    ; makedepends+=" poppler-devel>=${_poppler_void_version}_0"
+configure_args+=" --with-system-potrace"    ; makedepends+=" potrace-devel"
+configure_args+=" --with-system-teckit"     ; makedepends+=" libteckit-devel"
+configure_args+=" --with-system-xpdf"       ; makedepends+=" xpdf"
+configure_args+=" --with-system-zlib"       ; makedepends+=" zlib-devel"
+configure_args+=" --with-system-zziplib"    ; makedepends+=" zziplib-devel"
+configure_args+=" --with-x-dvi-toolkit=xaw" ; makedepends+=" libXaw-devel"
+
+configure_args+=" --with-system-libgs"      ; makedepends+=" ghostscript-devel"
+:                                           ; makedepends+=" ghostscript"
+
+if [ "${build_option_xindy}" ]; then
+:                                           ; makedepends+=" clisp"
+configure_args+=" --disable-xindy-docs"     ; :
+configure_args+=" --disable-xindy-rules"    ; :
+fi
+
+:                                           ; makedepends+=" fontconfig-devel"
+:                                           ; makedepends+=" perl"
+
+# asymptote/xindy/more?
+configure_args+=" --enable-gc=system"       ; makedepends+=" gc-devel"
+
+_asymptote_args+=" --enable-sigsegv"        ; makedepends+=" libsigsegv-devel"
+_asymptote_args+=" --enable-readline"       ; makedepends+=" readline-devel"
+_asymptote_args+=" --enable-gsl"            ; makedepends+=" gsl-devel"
+_asymptote_args+=" --enable-fftw"           ; makedepends+=" fftw-devel"
+# TODO: which libgl? another one altogether?
+_asymptote_args+=" --enable-gl"             ; makedepends+=" MesaLib-devel"
+:                                           ; makedepends+=" glu-devel"
+:                                           ; makedepends+=" libfreeglut-devel"
+:                                           ; makedepends+=" glew-devel"
+:                                           ; makedepends+=" glm"
+
+_asymptote_args+=" --enable-offscreen"
+
+_asymptote_args+=" --enable-texlive-build"
+_asymptote_args+=" --with-latex=/opt/texlive/${_year}/texmf-dist/tex/latex"
+_asymptote_args+=" --with-context=/opt/texlive/${_year}/texmf-dist/tex/context/third"
+_asymptote_args+=" --build=$(uname -m)-linux"
+_asymptote_args+=" --host=$(uname -m)-linux"
+_asymptote_args+=" --target=$(uname -m)-linux"
+
+_execdir="opt/texlive/${_year}/bin/xbps"
+
+configure_args+=" -C"
+configure_args+=" --with-banner-add=/Void"
+configure_args+=" --build=${XBPS_MACHINE/-musl/-linuxmusl}"
+configure_args+=" --host=${XBPS_MACHINE/-musl/-linuxmusl}"
+configure_args+=" --target=${XBPS_TARGET_MACHINE/-musl/-linuxmusl}"
+configure_args+=" --datarootdir=/opt/texlive/${_year}"
+configure_args+=" --prefix=/opt/texlive/${_year}"
+configure_args+=" --bindir=/${_execdir}"
+configure_args+=" --libdir=/usr/lib"
+configure_args+=" --includedir=/usr/include"
+configure_args+=" --mandir=/usr/share/man"
+configure_args+=" --infodir=/usr/share/info"
+# Confusingly named: means to not build for distribution via tlmgr.
+configure_args+=" --disable-native-texlive-build"
+configure_args+=" --enable-shared"
+configure_args+=" --disable-static"
+# Exit on error?
+#configure_args+=" --disable-missing"
+configure_args+=" --enable-largefile"
+configure_args+=" --disable-dependency-tracking" # "speeds up one-time build"
+configure_args+=" --with-pic"
+
+#configure_args+=" --disable-all-pkgs"
+#configure_args+=" --enable-pdftex"
+#configure_args+=" --enable-pdftools"
+
+# make texlinks does not know about DESTDIR
+# either install-* or texlinks also misses some things like lamed → aleph
+
+# TODO: texworks
+
+#configure_script="../Build"
+#make_build_target="world"
+#make_install_target="install-exec"
+
+_lib_versions() {
+	_kpathsea_long="$(  grep -E 'kpse_version'    ${wrksrc}/texk/kpathsea/version.ac | grep -Eo '[0-9]+\.[0-9]+\.[0-9]+')"
+	_ptexenc_long="$(   grep -E 'ptexenc_version' ${wrksrc}/texk/ptexenc/version.ac  | grep -Eo '[0-9]+\.[0-9]+\.[0-9]+')"
+	_synctex_long="$(   grep -E 'SYNCTEXVERSION'  ${wrksrc}/texk/web2c/configure     | grep -Eo '[0-9]+\.[0-9]+\.[0-9]+')"
+	_texluajit_long="$( grep -E 'luajit_version'  ${wrksrc}/libs/luajit/version.ac   | grep -Eo '[0-9]+\.[0-9]+\.[0-9]+')"
+	_texlua53_long="$(  grep -E 'lua53_version'   ${wrksrc}/libs/lua53/version.ac    | grep -Eo '[0-9]+\.[0-9]+\.[0-9]+')"
+	_kpathsea_short="$( echo ${_kpathsea_long}  | grep -Eo '^[0-9]+')"
+	_ptexenc_short="$(  echo ${_ptexenc_long}   | grep -Eo '^[0-9]+')"
+	_synctex_short="$(  echo ${_synctex_long}   | grep -Eo '^[0-9]+')"
+	_texluajit_short="$(echo ${_texluajit_long} | grep -Eo '^[0-9]+')"
+	_texlua53_short="$( echo ${_texlua53_long}  | grep -Eo '^[0-9]+')"
+}
+
+post_extract() {
+	cp -r ${XBPS_BUILDDIR}/{texlive-source-tags-texlive-${version},${pkgname}-${version}}
+	cd ${wrksrc}
+	cp texk/web2c/pdftexdir/pdftoepdf{-poppler${_poppler_epdf_version},}.cc
+	cp texk/web2c/pdftexdir/pdftosrc{-poppler${_poppler_src_version},}.cc
+	mkdir -p Work
+	( # TODO: remove when fixed: https://tug.org/pipermail/tex-k/2019-August/003036.html
+		cp ${wrksrc}/texk/kpathsea/tests/cnfline.test{,.disable}
+		echo -n > ${wrksrc}/texk/kpathsea/tests/cnfline.test
+	)
+	find . -exec touch {} \+ # work around https://tug.org/pipermail/tlbuild/2016q1/003441.html
+}
+
+do_configure() {
+	true
+}
+
+do_build() {
+
+	# TODO: automate the vopt_enable entries according to available build options, also in other places
+	POPPLER_VERSION="${_poppler_void_version}" \
+	DESTDIR="" \
+	TL_MAKE_FLAGS="${makejobs} \
+	${make_build_args}" \
+	../Build ${configure_args} "$(vopt_enable asymptote)" "$(vopt_enable dvisvgm)" "$(vopt_enable xetex)" "$(vopt_enable xindy)"
+
+	if [ "${build_option_asymptote}" ]; then
+		cd ${wrksrc}/utils/asymptote
+		./configure ${configure_args} ${_asymptote_args}
+		# sty should be texmf files from tlmgr
+		sed -Ei '/install-asy:/s/sty//g' Makefile
+		make asy
+		make install-asy
+		ln -fns ../../texmf-dist/asymptote/GUI/xasy.py /${_execdir}/xasy
+	fi
+
+}
+
+do_install() {
+	_lib_versions
+	vmkdir opt/texlive/${_year}/bin || true
+	mkdir -p /destdir/${pkgname}{,-lib{kpathsea,ptexenc,synctex,texlua53,texluajit}-devel}-${version}/usr/{include,lib/pkgconfig} || true
+	cp -a /${_execdir} ${DESTDIR}/opt/texlive/${_year}/bin/ || true
+	for _file in libptexenc.{la,so.${_ptexenc_long}} \
+		libsynctex.{la,so.${_synctex_long}} \
+		libtexluajit.{la,so.${_texluajit_long}} \
+		libtexlua53.{la,so.${_texlua53_long}} \
+		libkpathsea.{la,so.${_kpathsea_long}}; do
+		cp -a {,${DESTDIR}}/usr/lib/${_file} || true
+	done
+	for _file in kpathsea ptexenc synctex texluajit texlua53; do
+		cp -a {,${DESTDIR}}/usr/lib/pkgconfig/${_file}.pc || true
+		cp -a {,${DESTDIR}}/usr/include/${_file} || true
+	done
+	# replace tlmgr with script that first runs tlmgr and then installs/removes xbps based on tlpdb (TeX Live Package DataBase)
+	mv ${DESTDIR}/${_execdir}/tlmgr ${DESTDIR}/${_execdir}/tlmgr-without-xbps-sync
+	vinstall ${FILESDIR}/tlmgr 755 ${_execdir}
+}
+
+do_clean() {
+	rm -rf /opt/texlive
+	rmdir /opt
+}
+
+texlive2020-exec-libkpathsea_package() {
+	_lib_versions
+	short_desc="Path searching for TeX"
+	alternatives="libkpathsea:libkpathsea.so.${_kpathsea_short}:/usr/lib/libkpathsea.so.${_kpathsea_long}"
+	conflicts="libkpathsea>=0"
+	pkg_install() {
+		vmove usr/lib/libkpathsea.so.${_kpathsea_long}
+	}
+}
+
+texlive2020-exec-libkpathsea-devel_package() {
+	_lib_versions
+	depends="texlive${_year}-exec-libkpathsea>=${version}_${revision}"
+	short_desc="Path searching for TeX - development files"
+	_paths="usr/lib/libkpathsea.la usr/lib/pkgconfig/kpathsea.pc usr/include/kpathsea"
+	alternatives="libkpathsea-devel:libkpathsea.so:/usr/lib/libkpathsea.so.${_kpathsea_long}"
+	for _file in ${_paths}; do
+		alternatives+=" libkpathsea-devel:$(basename ${_file}):/${_file}.${_kpathsea_long}"; done
+	pkg_install() {
+		for _file in ${_paths}; do
+			mv ${DESTDIR}/${_file} ${PKGDESTDIR}/${_file}.${_kpathsea_long}; done
+	}
+}
+
+texlive2020-exec-libptexenc_package() {
+	_lib_versions
+	short_desc="""pTeX encoding library"
+	alternatives="libptexenc:libptexenc.so.${_ptexenc_short}:/usr/lib/libptexenc.so.${_ptexenc_long}"
+	conflicts="libptexenc>=0"
+	pkg_install() {
+		vmove usr/lib/libptexenc.so.${_ptexenc_long}
+	}
+}
+
+texlive2020-exec-libptexenc-devel_package() {
+	_lib_versions
+	depends="texlive${_year}-exec-libptexenc>=${version}_${revision}"
+	short_desc="""pTeX encoding library - development files"
+	_paths="usr/lib/libptexenc.la usr/lib/pkgconfig/ptexenc.pc usr/include/ptexenc"
+	alternatives="libptexenc-devel:libptexenc.so:/usr/lib/libptexenc.so.${_ptexenc_long}"
+	for _file in ${_paths}; do
+		alternatives+=" libptexenc-devel:$(basename ${_file}):/${_file}.${_ptexenc_long}"; done
+	pkg_install() {
+		for _file in ${_paths}; do
+			mv ${DESTDIR}/${_file} ${PKGDESTDIR}/${_file}.${_ptexenc_long}; done
+	}
+}
+
+texlive2020-exec-libsynctex_package() {
+	_lib_versions
+	short_desc="SyncTeX parser library"
+	alternatives="libsynctex:libsynctex.so.${_synctex_short}:/usr/lib/libsynctex.so.${_synctex_long}"
+	conflicts="libsynctex>=0"
+	pkg_install() {
+		vmove usr/lib/libsynctex.so.${_synctex_long}
+	}
+}
+
+texlive2020-exec-libsynctex-devel_package() {
+	_lib_versions
+	depends="texlive${_year}-exec-libsynctex>=${version}_${revision}"
+	short_desc="SyncTeX parser library - development files"
+	_paths="usr/lib/libsynctex.la usr/lib/pkgconfig/synctex.pc usr/include/synctex"
+	alternatives="libsynctex-devel:libsynctex.so:/usr/lib/libsynctex.so.${_synctex_long}"
+	for _file in ${_paths}; do
+		alternatives+=" libsynctex-devel:$(basename ${_file}):/${_file}.${_synctex_long}"; done
+	pkg_install() {
+		for _file in ${_paths}; do
+			mv ${DESTDIR}/${_file} ${PKGDESTDIR}/${_file}.${_synctex_long}; done
+	}
+}
+
+texlive2020-exec-libtexlua53_package() {
+	_lib_versions
+	short_desc="LuaTeX modified Lua"
+	alternatives="libtexlua53:libtexlua53.so.${_texlua53_short}:/usr/lib/libtexlua53.so.${_texlua53_long}"
+	conflicts="libtexlua53>=0 libtexlua>=0"
+	pkg_install() {
+		vmove usr/lib/libtexlua53.so.${_texlua53_long}
+	}
+}
+
+texlive2020-exec-libtexlua53-devel_package() {
+	_lib_versions
+	depends="texlive${_year}-exec-libtexlua53>=${version}_${revision}"
+	short_desc="LuaTeX modified Lua - development files"
+	_paths="usr/lib/libtexlua53.la usr/lib/pkgconfig/texlua53.pc usr/include/texlua53"
+	alternatives="libtexlua53-devel:libtexlua53.so:/usr/lib/libtexlua53.so.${_texlua53_long}"
+	for _file in ${_paths}; do
+		alternatives+=" libtexlua53-devel:$(basename ${_file}):/${_file}.${_texlua53_long}"; done
+	pkg_install() {
+		for _file in ${_paths}; do
+			mv ${DESTDIR}/${_file} ${PKGDESTDIR}/${_file}.${_texlua53_long}; done
+	}
+}
+
+texlive2020-exec-libtexluajit_package() {
+	_lib_versions
+	short_desc="LuaTeX modified LuaJIT"
+	alternatives="libtexluajit:libtexluajit.so.${_texluajit_short}:/usr/lib/libtexluajit.so.${_texluajit_long}"
+	conflicts="libtexluajit>=0 libtexlua>=0"
+	pkg_install() {
+		vmove usr/lib/libtexluajit.so.${_texluajit_long}
+	}
+}
+
+texlive2020-exec-libtexluajit-devel_package() {
+	_lib_versions
+	depends="texlive${_year}-exec-libtexluajit>=${version}_${revision}"
+	short_desc="LuaTeX modified LuaJIT - development files"
+	_paths="usr/lib/libtexluajit.la usr/lib/pkgconfig/texluajit.pc usr/include/texluajit"
+	alternatives="libtexluajit-devel:libtexluajit.so:/usr/lib/libtexluajit.so.${_texluajit_long}"
+	for _file in ${_paths}; do
+		alternatives+=" libtexluajit-devel:$(basename ${_file}):/${_file}.${_texluajit_long}"; done
+	pkg_install() {
+		for _file in ${_paths}; do
+			mv ${DESTDIR}/${_file} ${PKGDESTDIR}/${_file}.${_texluajit_long}; done
+	}
+}
+
+# NOTE: EVERYTHING AFTER THIS LINE SHOULD BE AUTOMATICALLY GENERATED
+
+texlive2020-exec-a2ping_package() {
+	depends="${sourcepkg}"
+	short_desc="Advanced PS, PDF, EPS converter"
+	pkg_install() {
+		for _file in a2ping; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-accfonts_package() {
+	depends="${sourcepkg}"
+	short_desc="Utilities to derive new fonts from existing ones"
+	pkg_install() {
+		for _file in mkt1font vpl2ovp vpl2vpl; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-adhocfilelist_package() {
+	depends="${sourcepkg}"
+	short_desc="'\\listfiles' entries from the command line"
+	pkg_install() {
+		for _file in adhocfilelist; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-afm2pl_package() {
+	depends="${sourcepkg}"
+	short_desc="Convert AFM to TeX property list (.pl) metrics"
+	pkg_install() {
+		for _file in afm2pl; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-aleph_package() {
+	depends="${sourcepkg}"
+	short_desc="Extended TeX"
+	pkg_install() {
+		for _file in aleph lamed; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-amstex_package() {
+	depends="${sourcepkg}-pdftex"
+	short_desc="American Mathematical Society plain TeX macros"
+	pkg_install() {
+		for _file in amstex; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-arara_package() {
+	depends="${sourcepkg}"
+	short_desc="Automation of LaTeX compilation"
+	pkg_install() {
+		for _file in arara; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-asymptote_package() {
+	depends="${sourcepkg} python-tkinter python-Pillow"
+	short_desc="2D and 3D TeX-Aware Vector Graphics Language"
+	pkg_install() {
+		for _file in asy xasy; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-attachfile2_package() {
+	depends="${sourcepkg}"
+	short_desc="Attach files into PDF"
+	pkg_install() {
+		for _file in pdfatfi; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-authorindex_package() {
+	depends="${sourcepkg}"
+	short_desc="Index citations by author names"
+	pkg_install() {
+		for _file in authorindex; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-autosp_package() {
+	depends="${sourcepkg}"
+	short_desc="Preprocessor that generates note-spacing commands for MusiXTeX scores"
+	pkg_install() {
+		for _file in autosp tex2aspc; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-axodraw2_package() {
+	depends="${sourcepkg}"
+	short_desc="Feynman diagrams in a LaTeX document"
+	pkg_install() {
+		for _file in axohelp; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-bib2gls_package() {
+	depends="${sourcepkg}"
+	short_desc="Convert .bib files to glossaries-extra.sty resource files"
+	pkg_install() {
+		for _file in bib2gls convertgls2bib; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-biber_package() {
+	depends="biber"
+	short_desc="BibTeX replacement for users of BibLaTeX"
+	build_style=meta
+}
+
+texlive2020-exec-bibexport_package() {
+	depends="${sourcepkg}"
+	short_desc="Extract a BibTeX file based on a .aux file"
+	pkg_install() {
+		for _file in bibexport; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-bibtex_package() {
+	depends="${sourcepkg}"
+	short_desc="Process bibliographies for LaTeX, etc"
+	pkg_install() {
+		for _file in bibtex; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-bibtex8_package() {
+	depends="${sourcepkg}"
+	short_desc="BibTeX variant supporting 8-bit encodings"
+	pkg_install() {
+		for _file in bibtex8; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-bibtexu_package() {
+	depends="${sourcepkg}"
+	short_desc="BibTeX variant supporting Unicode (UTF-8)"
+	pkg_install() {
+		for _file in bibtexu; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-bundledoc_package() {
+	depends="${sourcepkg}"
+	short_desc="Bundle together all the files needed to build a LaTeX document"
+	pkg_install() {
+		for _file in arlatex bundledoc; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-cachepic_package() {
+	depends="${sourcepkg}"
+	short_desc="Convert document fragments into graphics"
+	pkg_install() {
+		for _file in cachepic; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-checkcites_package() {
+	depends="${sourcepkg}"
+	short_desc="Check citation commands in a document"
+	pkg_install() {
+		for _file in checkcites; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-checklistings_package() {
+	depends="${sourcepkg}"
+	short_desc="Compile verbatim contents and reincorporate the resulting output"
+	pkg_install() {
+		for _file in checklistings; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-chklref_package() {
+	depends="${sourcepkg}"
+	short_desc="Check for problems with labels in LaTeX"
+	pkg_install() {
+		for _file in chklref; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-chktex_package() {
+	depends="${sourcepkg}"
+	short_desc="Check for errors in LaTeX documents"
+	pkg_install() {
+		for _file in chktex chkweb deweb; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-cjk-gs-integrate_package() {
+	depends="${sourcepkg}"
+	short_desc="Tools to integrate CJK fonts into Ghostscript"
+	pkg_install() {
+		for _file in cjk-gs-integrate; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-cjkutils_package() {
+	depends="${sourcepkg}"
+	short_desc="CJK language support"
+	pkg_install() {
+		for _file in bg5+latex bg5+pdflatex bg5conv bg5latex bg5pdflatex cef5conv cef5latex cef5pdflatex cefconv ceflatex cefpdflatex cefsconv cefslatex cefspdflatex extconv gbklatex gbkpdflatex hbf2gf sjisconv sjislatex sjispdflatex; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-clojure-pamphlet_package() {
+	depends="${sourcepkg}"
+	short_desc="Simple literate programming tool based on clojure's pamphlet system"
+	pkg_install() {
+		for _file in pamphletangler; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-cluttex_package() {
+	depends="${sourcepkg}"
+	short_desc="Automation tool for running LaTeX"
+	pkg_install() {
+		for _file in cllualatex cluttex clxelatex; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-context_package() {
+	depends="${sourcepkg}"
+	short_desc="ConTeXt macro package"
+	pkg_install() {
+		for _file in context contextjit luatools mtxrun mtxrunjit texexec texmfstart; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-convbkmk_package() {
+	depends="${sourcepkg}"
+	short_desc="Correct platex/uplatex bookmarks in PDF created with hyperref"
+	pkg_install() {
+		for _file in convbkmk; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-crossrefware_package() {
+	depends="${sourcepkg}"
+	short_desc="Scripts for working with crossref.org"
+	pkg_install() {
+		for _file in bbl2bib bibdoiadd bibmradd biburl2doi bibzbladd ltx2crossrefxml; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-cslatex_package() {
+	depends="${sourcepkg}-pdftex"
+	short_desc="LaTeX support for Czech/Slovak typesetting"
+	pkg_install() {
+		for _file in cslatex pdfcslatex; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-csplain_package() {
+	depends="${sourcepkg}-pdftex"
+	short_desc="Plain TeX multilanguage support"
+	pkg_install() {
+		for _file in csplain luacsplain pdfcsplain; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-ctan-o-mat_package() {
+	depends="${sourcepkg}"
+	short_desc="Upload or validate a package for CTAN"
+	pkg_install() {
+		for _file in ctan-o-mat; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-ctanbib_package() {
+	depends="${sourcepkg}"
+	short_desc="Export CTAN entries to bib format"
+	pkg_install() {
+		for _file in ctanbib; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-ctanify_package() {
+	depends="${sourcepkg}"
+	short_desc="Prepare a package for upload to CTAN"
+	pkg_install() {
+		for _file in ctanify; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-ctanupload_package() {
+	depends="${sourcepkg}"
+	short_desc="Support for users uploading to CTAN"
+	pkg_install() {
+		for _file in ctanupload; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-ctie_package() {
+	depends="${sourcepkg}"
+	short_desc="C version of tie (merging Web change files)"
+	pkg_install() {
+		for _file in ctie; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-cweb_package() {
+	depends="${sourcepkg}"
+	short_desc="CWEB for ANSI-C/C++ compilers"
+	pkg_install() {
+		for _file in ctangle ctwill ctwill-refsort ctwill-twinx cweave; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-cyrillic-bin_package() {
+	depends="${sourcepkg}"
+	short_desc="Cyrillic bibtex and makeindex"
+	pkg_install() {
+		for _file in rubibtex rumakeindex; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-de-macro_package() {
+	depends="${sourcepkg}"
+	short_desc="Expand private macros in a document"
+	pkg_install() {
+		for _file in de-macro; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-detex_package() {
+	depends="${sourcepkg}"
+	short_desc="Strip TeX from a source file"
+	pkg_install() {
+		for _file in detex; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-diadia_package() {
+	depends="${sourcepkg}"
+	short_desc="Package to keep a diabetes diary"
+	pkg_install() {
+		for _file in diadia; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-dosepsbin_package() {
+	depends="${sourcepkg}"
+	short_desc="Deal with DOS binary EPS files"
+	pkg_install() {
+		for _file in dosepsbin; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-dtl_package() {
+	depends="${sourcepkg}"
+	short_desc="Tools to dis-assemble and re-assemble DVI files"
+	pkg_install() {
+		for _file in dt2dv dv2dt; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-dtxgen_package() {
+	depends="${sourcepkg}"
+	short_desc="Creates a template for a self-extracting .dtx file"
+	pkg_install() {
+		for _file in dtxgen; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-dvi2tty_package() {
+	depends="${sourcepkg}"
+	short_desc="Produce ASCII from DVI"
+	pkg_install() {
+		for _file in disdvi dvi2tty; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-dviasm_package() {
+	depends="${sourcepkg}"
+	short_desc="Utility for editing DVI files"
+	pkg_install() {
+		for _file in dviasm; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-dvicopy_package() {
+	depends="${sourcepkg}"
+	short_desc="Copy DVI files, flattening VFs"
+	pkg_install() {
+		for _file in dvicopy; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-dvidvi_package() {
+	depends="${sourcepkg}"
+	short_desc="Convert one DVI file into another"
+	pkg_install() {
+		for _file in dvidvi; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-dviinfox_package() {
+	depends="${sourcepkg}"
+	short_desc="Perl script to print DVI meta information"
+	pkg_install() {
+		for _file in dviinfox; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-dviljk_package() {
+	depends="${sourcepkg}"
+	short_desc="DVI to Laserjet output"
+	pkg_install() {
+		for _file in dvihp dvilj dvilj2p dvilj4 dvilj4l dvilj6; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-dviout-util_package() {
+	depends="${sourcepkg}"
+	short_desc="""dviout-util"
+	pkg_install() {
+		for _file in chkdvifont dvispc; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-dvipdfmx_package() {
+	depends="${sourcepkg}-xetex"
+	short_desc="Extended version of dvipdfm"
+	pkg_install() {
+		for _file in dvipdfm dvipdfmx dvipdft ebb extractbb xdvipdfmx; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-dvipng_package() {
+	depends="${sourcepkg}"
+	short_desc="Fast DVI to PNG/GIF converter"
+	pkg_install() {
+		for _file in dvigif dvipng; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-dvipos_package() {
+	depends="${sourcepkg}"
+	short_desc="Support DVI pos: specials used by ConTeXt DVI output"
+	pkg_install() {
+		for _file in dvipos; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-dvips_package() {
+	depends="${sourcepkg}"
+	short_desc="DVI to PostScript driver"
+	pkg_install() {
+		for _file in afm2tfm dvips; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-dvisvgm_package() {
+	depends="${sourcepkg}"
+	short_desc="Convert DVI, EPS, and PDF files to SVG"
+	pkg_install() {
+		for _file in dvisvgm; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-ebong_package() {
+	depends="${sourcepkg}"
+	short_desc="Utility for writing Bengali in Rapid Roman Format"
+	pkg_install() {
+		for _file in ebong; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-eplain_package() {
+	depends="${sourcepkg}-pdftex"
+	short_desc="Extended plain TeX macros"
+	pkg_install() {
+		for _file in eplain; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-epspdf_package() {
+	depends="${sourcepkg}"
+	short_desc="Converter for PostScript, EPS and PDF"
+	pkg_install() {
+		for _file in epspdf epspdftk; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-epstopdf_package() {
+	depends="${sourcepkg}"
+	short_desc="Convert EPS to PDF using Ghostscript"
+	pkg_install() {
+		for _file in epstopdf repstopdf; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-exceltex_package() {
+	depends="${sourcepkg}"
+	short_desc="Get data from Excel files into LaTeX"
+	pkg_install() {
+		for _file in exceltex; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-fig4latex_package() {
+	depends="${sourcepkg}"
+	short_desc="Management of figures for large LaTeX documents"
+	pkg_install() {
+		for _file in fig4latex; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-findhyph_package() {
+	depends="${sourcepkg}"
+	short_desc="Find hyphenated words in a document"
+	pkg_install() {
+		for _file in findhyph; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-fontinst_package() {
+	depends="${sourcepkg}"
+	short_desc="Help with installing fonts for TeX and LaTeX"
+	pkg_install() {
+		for _file in fontinst; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-fontools_package() {
+	depends="${sourcepkg}"
+	short_desc="Tools to simplify using fonts (especially TT/OTF ones)"
+	pkg_install() {
+		for _file in afm2afm autoinst ot2kpx; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-fontware_package() {
+	depends="${sourcepkg}"
+	short_desc="Tools for virtual font metrics"
+	pkg_install() {
+		for _file in pltotf tftopl vftovp vptovf; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-fragmaster_package() {
+	depends="${sourcepkg}"
+	short_desc="Using psfrag with pdfLaTeX"
+	pkg_install() {
+		for _file in fragmaster; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-getmap_package() {
+	depends="${sourcepkg}"
+	short_desc="Download OpenStreetMap maps for use in documents"
+	pkg_install() {
+		for _file in getmapdl; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-glossaries_package() {
+	depends="${sourcepkg}"
+	short_desc="Create glossaries and lists of acronyms"
+	pkg_install() {
+		for _file in makeglossaries makeglossaries-lite; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-gregoriotex_package() {
+	depends="${sourcepkg}"
+	short_desc="Engraving Gregorian Chant scores"
+	pkg_install() {
+		for _file in gregorio; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-gsftopk_package() {
+	depends="${sourcepkg}"
+	short_desc="Convert \"Ghostscript fonts\" to PK files"
+	pkg_install() {
+		for _file in gsftopk; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-installfont_package() {
+	depends="${sourcepkg}"
+	short_desc="Bash script for installing a LaTeX font family"
+	pkg_install() {
+		for _file in installfont-tl; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-jadetex_package() {
+	depends="${sourcepkg}-pdftex"
+	short_desc="Macros supporting Jade DSSSL output"
+	pkg_install() {
+		for _file in jadetex pdfjadetex; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-jfmutil_package() {
+	depends="${sourcepkg}"
+	short_desc="Utility to process pTeX-extended TFM and VF"
+	pkg_install() {
+		for _file in jfmutil; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-ketcindy_package() {
+	depends="${sourcepkg}"
+	short_desc="Macros for graphic generation and Cinderella plugin"
+	pkg_install() {
+		for _file in ketcindy; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-kotex-utils_package() {
+	depends="${sourcepkg}"
+	short_desc="Utility scripts and support files for typesetting Korean"
+	pkg_install() {
+		for _file in jamo-normalize komkindex ttf2kotexfont; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-kpathsea_package() {
+	short_desc="Path searching library for TeX-related files"
+	pkg_install() {
+		for _file in kpseaccess kpsereadlink kpsestat kpsewhich; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-l3build_package() {
+	depends="${sourcepkg}"
+	short_desc="Testing and building system for (La)TeX"
+	pkg_install() {
+		for _file in l3build; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-lacheck_package() {
+	depends="${sourcepkg}"
+	short_desc="LaTeX checker"
+	pkg_install() {
+		for _file in lacheck; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-latex-bin-dev_package() {
+	depends="${sourcepkg}"
+	short_desc="LaTeX pre-release executables and formats"
+	pkg_install() {
+		for _file in dvilualatex-dev latex-dev lualatex-dev pdflatex-dev; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-latex-bin_package() {
+	depends="${sourcepkg}-pdftex"
+	short_desc="LaTeX executables and man pages"
+	pkg_install() {
+		for _file in dvilualatex latex lualatex pdflatex; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-latex-git-log_package() {
+	depends="${sourcepkg}"
+	short_desc="Typeset git log information"
+	pkg_install() {
+		for _file in latex-git-log; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-latex-papersize_package() {
+	depends="${sourcepkg}"
+	short_desc="Calculate LaTeX settings for any font and paper size"
+	pkg_install() {
+		for _file in latex-papersize; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-latex2man_package() {
+	depends="${sourcepkg}"
+	short_desc="Translate LaTeX-based manual pages into Unix man format"
+	pkg_install() {
+		for _file in latex2man; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-latex2nemeth_package() {
+	depends="${sourcepkg}"
+	short_desc="Convert LaTeX source to Braille with math in Nemeth"
+	pkg_install() {
+		for _file in latex2nemeth; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-latexfileversion_package() {
+	depends="${sourcepkg}"
+	short_desc="Prints the version and date of a LaTeX class or style file"
+	pkg_install() {
+		for _file in latexfileversion; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-latexindent_package() {
+	depends="${sourcepkg}"
+	short_desc="Indent a LaTeX document, highlighting the programming structure"
+	pkg_install() {
+		for _file in latexindent; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-latexmk_package() {
+	depends="${sourcepkg}"
+	short_desc="Fully automated LaTeX document generation"
+	pkg_install() {
+		for _file in latexmk; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-latexpand_package() {
+	depends="${sourcepkg}"
+	short_desc="Expand \\input and \\include in a LaTeX document"
+	pkg_install() {
+		for _file in latexpand; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-lcdftypetools_package() {
+	depends="${sourcepkg}"
+	short_desc="Bundle of outline font manipulation tools"
+	pkg_install() {
+		for _file in cfftot1 mmafm mmpfb otfinfo otftotfm t1dotlessj t1lint t1rawafm t1reencode t1testpage ttftotype42; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-lilyglyphs_package() {
+	depends="${sourcepkg}"
+	short_desc="Access lilypond fragments and glyphs, in LaTeX"
+	pkg_install() {
+		for _file in lily-glyph-commands lily-image-commands lily-rebuild-pdfs; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-listbib_package() {
+	depends="${sourcepkg}"
+	short_desc="Lists contents of BibTeX files"
+	pkg_install() {
+		for _file in listbib; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-listings-ext_package() {
+	depends="${sourcepkg}"
+	short_desc="Automated input of source"
+	pkg_install() {
+		for _file in listings-ext.sh; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-lollipop_package() {
+	depends="${sourcepkg}-tex"
+	short_desc="TeX made easy"
+	pkg_install() {
+		for _file in lollipop; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-ltxfileinfo_package() {
+	depends="${sourcepkg}"
+	short_desc="Print version information for a LaTeX file"
+	pkg_install() {
+		for _file in ltxfileinfo; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-ltximg_package() {
+	depends="${sourcepkg}"
+	short_desc="Extract LaTeX environments into separate image files"
+	pkg_install() {
+		for _file in ltximg; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-luahbtex_package() {
+	depends="${sourcepkg}"
+	short_desc="LuaTeX with HarfBuzz library for glyph shaping"
+	pkg_install() {
+		for _file in luahbtex; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-luajittex_package() {
+	depends="${sourcepkg}"
+	short_desc="LuaTeX with just-in-time (jit) compiler, with and without HarfBuzz"
+	pkg_install() {
+		for _file in luajithbtex luajittex texluajit texluajitc; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-luaotfload_package() {
+	depends="${sourcepkg}"
+	short_desc="OpenType 'loader' for Plain TeX and LaTeX"
+	pkg_install() {
+		for _file in luaotfload-tool; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-luatex_package() {
+	depends="${sourcepkg}"
+	short_desc="LuaTeX engine"
+	pkg_install() {
+		for _file in dviluatex luatex texlua texluac; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-lwarp_package() {
+	depends="${sourcepkg}"
+	short_desc="Converts LaTeX to HTML"
+	pkg_install() {
+		for _file in lwarpmk; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-m-tx_package() {
+	depends="${sourcepkg}"
+	short_desc="Preprocessor for pmx"
+	pkg_install() {
+		for _file in m-tx prepmx; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-make4ht_package() {
+	depends="${sourcepkg}"
+	short_desc="Build system for tex4ht"
+	pkg_install() {
+		for _file in make4ht; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-makedtx_package() {
+	depends="${sourcepkg}"
+	short_desc="Perl script to help generate dtx and ins files"
+	pkg_install() {
+		for _file in makedtx; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-makeindex_package() {
+	depends="${sourcepkg}"
+	short_desc="Makeindex development sources"
+	pkg_install() {
+		for _file in makeindex mkindex; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-match_parens_package() {
+	depends="${sourcepkg}"
+	short_desc="Find mismatches of parentheses, braces, (angle) brackets, in texts"
+	pkg_install() {
+		for _file in match_parens; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-mathspic_package() {
+	depends="${sourcepkg}"
+	short_desc="Perl filter program for use with PiCTeX"
+	pkg_install() {
+		for _file in mathspic; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-metafont_package() {
+	depends="${sourcepkg}"
+	short_desc="System for specifying fonts"
+	pkg_install() {
+		for _file in inimf mf mf-nowin; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-metapost_package() {
+	depends="${sourcepkg}"
+	short_desc="Development of Metafont for creating graphics"
+	pkg_install() {
+		for _file in dvitomp mfplain mpost r-mpost; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-mex_package() {
+	depends="${sourcepkg}-pdftex"
+	short_desc="Polish formats for TeX"
+	pkg_install() {
+		for _file in mex pdfmex utf8mex; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-mf2pt1_package() {
+	depends="${sourcepkg}"
+	short_desc="Produce PostScript Type 1 fonts from Metafont source"
+	pkg_install() {
+		for _file in mf2pt1; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-mflua_package() {
+	depends="${sourcepkg}"
+	short_desc="Configuration and base files for MFLua"
+	pkg_install() {
+		for _file in mflua mflua-nowin mfluajit mfluajit-nowin; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-mfware_package() {
+	depends="${sourcepkg}"
+	short_desc="Supporting tools for use with Metafont"
+	pkg_install() {
+		for _file in gftodvi gftopk gftype mft pktogf pktype; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-mkgrkindex_package() {
+	depends="${sourcepkg}"
+	short_desc="Makeindex working with Greek"
+	pkg_install() {
+		for _file in mkgrkindex; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-mkjobtexmf_package() {
+	depends="${sourcepkg}"
+	short_desc="Generate a texmf tree for a particular job"
+	pkg_install() {
+		for _file in mkjobtexmf; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-mkpic_package() {
+	depends="${sourcepkg}"
+	short_desc="Perl interface to mfpic"
+	pkg_install() {
+		for _file in mkpic; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-mltex_package() {
+	depends="${sourcepkg}-pdftex"
+	short_desc="MLTeX system"
+	pkg_install() {
+		for _file in mllatex mltex; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-mptopdf_package() {
+	depends="${sourcepkg}"
+	short_desc="""mpost to PDF, native MetaPost graphics inclusion"
+	pkg_install() {
+		for _file in mptopdf; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-multibibliography_package() {
+	depends="${sourcepkg}"
+	short_desc="Multiple versions of a bibliography, with different sort orders"
+	pkg_install() {
+		for _file in multibibliography; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-musixtex_package() {
+	depends="${sourcepkg}"
+	short_desc="Sophisticated music typesetting"
+	pkg_install() {
+		for _file in musixflx musixtex; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-musixtnt_package() {
+	depends="${sourcepkg}"
+	short_desc="MusiXTeX extension library to transform the effect of notes commands"
+	pkg_install() {
+		for _file in msxlint; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-omegaware_package() {
+	depends="${sourcepkg}"
+	short_desc="Wide-character-set extension of TeX"
+	pkg_install() {
+		for _file in odvicopy odvitype ofm2opl omfonts opl2ofm otangle otp2ocp outocp ovf2ovp ovp2ovf wofm2opl wopl2ofm wovf2ovp; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-optex_package() {
+	depends="${sourcepkg}"
+	short_desc="LuaTeX format based on Plain TeX and OPmac"
+	pkg_install() {
+		for _file in optex; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-patgen_package() {
+	depends="${sourcepkg}"
+	short_desc="Generate hyphenation patterns"
+	pkg_install() {
+		for _file in patgen; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-pax_package() {
+	depends="${sourcepkg}"
+	short_desc="Extract and reinsert PDF annotations with pdfTeX"
+	pkg_install() {
+		for _file in pdfannotextractor; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-pdfbook2_package() {
+	depends="${sourcepkg}"
+	short_desc="Create booklets from PDF files"
+	pkg_install() {
+		for _file in pdfbook2; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-pdfcrop_package() {
+	depends="${sourcepkg}"
+	short_desc="Crop PDF graphics"
+	pkg_install() {
+		for _file in pdfcrop rpdfcrop; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-pdfjam_package() {
+	depends="${sourcepkg}"
+	short_desc="Shell scripts interfacing to pdfpages"
+	pkg_install() {
+		for _file in pdfjam; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-pdflatexpicscale_package() {
+	depends="${sourcepkg}"
+	short_desc="Support software for downscaling graphics to be included by pdfLaTeX"
+	pkg_install() {
+		for _file in pdflatexpicscale; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-pdftex-quiet_package() {
+	depends="${sourcepkg}"
+	short_desc="Bash wrapper for pdfTeX limiting its output to relevant errors"
+	pkg_install() {
+		for _file in pdftex-quiet; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-pdftex_package() {
+	depends="${sourcepkg}"
+	short_desc="TeX extension for direct creation of PDF"
+	pkg_install() {
+		for _file in etex pdfetex pdftex simpdftex; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-pdftosrc_package() {
+	depends="${sourcepkg}"
+	short_desc="Extract source file or stream from PDF file"
+	pkg_install() {
+		for _file in pdftosrc; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-pdfxup_package() {
+	depends="${sourcepkg}"
+	short_desc="Create n-up PDF pages with minimal margins"
+	pkg_install() {
+		for _file in pdfxup; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-pedigree-perl_package() {
+	depends="${sourcepkg}"
+	short_desc="Generate TeX pedigree files from CSV files"
+	pkg_install() {
+		for _file in pedigree; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-perltex_package() {
+	depends="${sourcepkg}"
+	short_desc="Define LaTeX macros in terms of Perl code"
+	pkg_install() {
+		for _file in perltex; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-petri-nets_package() {
+	depends="${sourcepkg}"
+	short_desc="Set TeX/LaTeX packages for drawing Petri nets"
+	pkg_install() {
+		for _file in pn2pdf; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-pfarrei_package() {
+	depends="${sourcepkg}"
+	short_desc="LaTeX support of pastors' and priests' work"
+	pkg_install() {
+		for _file in a5toa4 pfarrei; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-pkfix-helper_package() {
+	depends="${sourcepkg}"
+	short_desc="Make PostScript files accessible to pkfix"
+	pkg_install() {
+		for _file in pkfix-helper; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-pkfix_package() {
+	depends="${sourcepkg}"
+	short_desc="Replace pk fonts in PostScript with Type 1 fonts"
+	pkg_install() {
+		for _file in pkfix; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-platex_package() {
+	depends="${sourcepkg}-ptex"
+	short_desc="""pLaTeX2e and miscellaneous macros for pTeX"
+	pkg_install() {
+		for _file in platex platex-dev; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-pmx_package() {
+	depends="${sourcepkg}"
+	short_desc="Preprocessor for MusiXTeX"
+	pkg_install() {
+		for _file in pmxab scor2prt; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-pmxchords_package() {
+	depends="${sourcepkg}"
+	short_desc="Produce chord information to go with pmx output"
+	pkg_install() {
+		for _file in pmxchords; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-ps2eps_package() {
+	depends="${sourcepkg}"
+	short_desc="Produce Encapsulated PostScript from PostScript"
+	pkg_install() {
+		for _file in bbox ps2eps; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-ps2pk_package() {
+	depends="${sourcepkg}"
+	short_desc="Generate a PK font from an Adobe Type 1 font"
+	pkg_install() {
+		for _file in mag pfb2pfa pk2bm ps2pk; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-pst-pdf_package() {
+	depends="${sourcepkg}"
+	short_desc="Make PDF versions of graphics by processing between runs"
+	pkg_install() {
+		for _file in ps4pdf; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-pst2pdf_package() {
+	depends="${sourcepkg}"
+	short_desc="Script to compile PSTricks documents via pdfTeX"
+	pkg_install() {
+		for _file in pst2pdf; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-psutils_package() {
+	depends="${sourcepkg}"
+	short_desc="PostScript utilities"
+	pkg_install() {
+		for _file in epsffit extractres includeres psbook psjoin psnup psresize psselect pstops; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-ptex-fontmaps_package() {
+	depends="${sourcepkg}"
+	short_desc="Font maps and configuration tools for CJK fonts with (u)ptex"
+	pkg_install() {
+		for _file in kanji-config-updmap kanji-config-updmap-sys kanji-config-updmap-user kanji-fontmap-creator; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-ptex_package() {
+	depends="${sourcepkg}"
+	short_desc="TeX system for publishing in Japanese"
+	pkg_install() {
+		for _file in eptex makejvf mendex pbibtex pdvitomp pdvitype pmpost ppltotf ptex ptftopl r-pmpost; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-ptex2pdf_package() {
+	depends="${sourcepkg}"
+	short_desc="Convert Japanese TeX documents to PDF"
+	pkg_install() {
+		for _file in ptex2pdf; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-purifyeps_package() {
+	depends="${sourcepkg}"
+	short_desc="Make EPS work with both LaTeX/dvips and pdfLaTeX"
+	pkg_install() {
+		for _file in purifyeps; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-pygmentex_package() {
+	depends="${sourcepkg}"
+	short_desc="Use Pygments to format code listings in documents"
+	pkg_install() {
+		for _file in pygmentex; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-pythontex_package() {
+	depends="${sourcepkg}"
+	short_desc="Run Python from within a document, typesetting the results"
+	pkg_install() {
+		for _file in depythontex pythontex; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-rubik_package() {
+	depends="${sourcepkg}"
+	short_desc="Document Rubik cube configurations and rotation sequences"
+	pkg_install() {
+		for _file in rubikrotation; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-seetexk_package() {
+	depends="${sourcepkg}"
+	short_desc="Utilities for manipulating DVI files"
+	pkg_install() {
+		for _file in dvibook dviconcat dviselect dvitodvi; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-splitindex_package() {
+	depends="${sourcepkg}"
+	short_desc="Unlimited number of indexes"
+	pkg_install() {
+		for _file in splitindex; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-srcredact_package() {
+	depends="${sourcepkg}"
+	short_desc="Tool for redacting sources"
+	pkg_install() {
+		for _file in srcredact; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-sty2dtx_package() {
+	depends="${sourcepkg}"
+	short_desc="Create a .dtx file from a .sty file"
+	pkg_install() {
+		for _file in sty2dtx; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-svn-multi_package() {
+	depends="${sourcepkg}"
+	short_desc="Subversion keywords in multi-file LaTeX documents"
+	pkg_install() {
+		for _file in svn-multi; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-synctex_package() {
+	depends="${sourcepkg}"
+	short_desc="Engine-level feature synchronizing output and source"
+	pkg_install() {
+		for _file in synctex; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-t1utils_package() {
+	depends="${sourcepkg}"
+	short_desc="Simple Type 1 font manipulation programs"
+	pkg_install() {
+		for _file in t1ascii t1asm t1binary t1disasm t1mac t1unmac; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-tex_package() {
+	depends="${sourcepkg}"
+	short_desc="Sophisticated typesetting engine"
+	pkg_install() {
+		for _file in initex tex; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-tex4ebook_package() {
+	depends="${sourcepkg}"
+	short_desc="Convertor from LaTeX to ebook formats"
+	pkg_install() {
+		for _file in tex4ebook; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-tex4ht_package() {
+	depends="${sourcepkg}"
+	short_desc="Convert (La)TeX to HTML/XML"
+	pkg_install() {
+		for _file in ht htcontext htlatex htmex httex httexi htxelatex htxetex mk4ht t4ht tex4ht xhlatex; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-texcount_package() {
+	depends="${sourcepkg}"
+	short_desc="Count words in a LaTeX document"
+	pkg_install() {
+		for _file in texcount; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-texdef_package() {
+	depends="${sourcepkg}"
+	short_desc="Display the definitions of TeX commands"
+	pkg_install() {
+		for _file in latexdef texdef; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-texdiff_package() {
+	depends="${sourcepkg}"
+	short_desc="Compare documents and produce tagged merge"
+	pkg_install() {
+		for _file in texdiff; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-texdirflatten_package() {
+	depends="${sourcepkg}"
+	short_desc="Collect files related to a LaTeX job in a single directory"
+	pkg_install() {
+		for _file in texdirflatten; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-texdoc_package() {
+	depends="${sourcepkg}"
+	short_desc="Documentation access for TeX Live"
+	pkg_install() {
+		for _file in texdoc; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-texdoctk_package() {
+	depends="${sourcepkg}"
+	short_desc="Easy access to package documentation"
+	pkg_install() {
+		for _file in texdoctk; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-texfot_package() {
+	depends="${sourcepkg}"
+	short_desc="Filter clutter from the output of a TeX run"
+	pkg_install() {
+		for _file in texfot; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-texlive-scripts-extra_package() {
+	depends="${sourcepkg}"
+	short_desc="TeX Live scripts"
+	pkg_install() {
+		for _file in allcm allec allneeded dvi2fax dvired e2pall kpsepath kpsetool kpsewhere kpsexpand mkocp mkofm ps2frag pslatex texconfig texconfig-dialog texconfig-sys texlinks; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-texlive-scripts_package() {
+	depends="${sourcepkg}"
+	short_desc="TeX Live infrastructure programs"
+	pkg_install() {
+		for _file in fmtutil fmtutil-sys fmtutil-user mktexfmt mktexmf mktexpk mktextfm rungs texhash updmap updmap-sys updmap-user; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-texlive.infra_package() {
+	depends="wget xz"
+	short_desc="Basic TeX Live infrastructure"
+	pkg_install() {
+		for _file in mktexlsr tlmgr; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-texliveonfly_package() {
+	depends="${sourcepkg}"
+	short_desc="On-the-fly download of missing TeX live packages"
+	pkg_install() {
+		for _file in texliveonfly; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-texloganalyser_package() {
+	depends="${sourcepkg}"
+	short_desc="Analyse TeX logs"
+	pkg_install() {
+		for _file in texloganalyser; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-texosquery_package() {
+	depends="${sourcepkg}"
+	short_desc="Cross-platform Java application to query OS information"
+	pkg_install() {
+		for _file in texosquery texosquery-jre5 texosquery-jre8; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-texplate_package() {
+	depends="${sourcepkg}"
+	short_desc="Tool for creating document structures based on templates"
+	pkg_install() {
+		for _file in texplate; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-texsis_package() {
+	depends="${sourcepkg}-pdftex"
+	short_desc="Plain TeX macros for Physicists"
+	pkg_install() {
+		for _file in texsis; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-texware_package() {
+	depends="${sourcepkg}"
+	short_desc="Utility programs for use with TeX"
+	pkg_install() {
+		for _file in dvitype pooltype; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-thumbpdf_package() {
+	depends="${sourcepkg}"
+	short_desc="Thumbnails for pdfTeX and dvips/ps2pdf"
+	pkg_install() {
+		for _file in thumbpdf; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-tie_package() {
+	depends="${sourcepkg}"
+	short_desc="Allow multiple web change files"
+	pkg_install() {
+		for _file in tie; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-tlcockpit_package() {
+	depends="${sourcepkg}"
+	short_desc="GUI frontend to TeX Live Manager (tlmgr)"
+	pkg_install() {
+		for _file in tlcockpit; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-tlshell_package() {
+	depends="${sourcepkg}"
+	short_desc="GUI frontend (tcl/tk-based) for tlmgr"
+	pkg_install() {
+		for _file in tlshell; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-tpic2pdftex_package() {
+	depends="${sourcepkg}"
+	short_desc="Use tpic commands in pdfTeX"
+	pkg_install() {
+		for _file in tpic2pdftex; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-ttfutils_package() {
+	depends="${sourcepkg}"
+	short_desc="Convert TrueType to TFM and PK fonts"
+	pkg_install() {
+		for _file in ttf2afm ttf2pk ttf2tfm ttfdump; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-typeoutfileinfo_package() {
+	depends="${sourcepkg}"
+	short_desc="Display class/package/file information"
+	pkg_install() {
+		for _file in typeoutfileinfo; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-ulqda_package() {
+	depends="${sourcepkg}"
+	short_desc="Support of Qualitative Data Analysis"
+	pkg_install() {
+		for _file in ulqda; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-uplatex_package() {
+	depends="${sourcepkg}-uptex"
+	short_desc="""pLaTeX2e and miscellaneous macros for upTeX"
+	pkg_install() {
+		for _file in uplatex uplatex-dev; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-uptex_package() {
+	depends="${sourcepkg}"
+	short_desc="Unicode version of pTeX"
+	pkg_install() {
+		for _file in euptex r-upmpost upbibtex updvitomp updvitype upmendex upmpost uppltotf uptex uptftopl wovp2ovf; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-urlbst_package() {
+	depends="${sourcepkg}"
+	short_desc="Web support for BibTeX"
+	pkg_install() {
+		for _file in urlbst; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-velthuis_package() {
+	depends="${sourcepkg}"
+	short_desc="Typeset Devanagari"
+	pkg_install() {
+		for _file in devnag; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-vlna_package() {
+	depends="${sourcepkg}"
+	short_desc="Add ~ after non-syllabic preposition, for Czech/Slovak"
+	pkg_install() {
+		for _file in vlna; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-vpe_package() {
+	depends="${sourcepkg}"
+	short_desc="Source specials for PDF output"
+	pkg_install() {
+		for _file in vpe; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-web_package() {
+	depends="${sourcepkg}"
+	short_desc="Original literate programming system"
+	pkg_install() {
+		for _file in tangle weave; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-webquiz_package() {
+	depends="${sourcepkg}"
+	short_desc="Write interactive web based quizzes"
+	pkg_install() {
+		for _file in webquiz; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-wordcount_package() {
+	depends="${sourcepkg}"
+	short_desc="Estimate the number of words in a LaTeX document"
+	pkg_install() {
+		for _file in wordcount; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-xdvi_package() {
+	depends="${sourcepkg}"
+	short_desc="DVI previewer for the X Window System"
+	pkg_install() {
+		for _file in xdvi xdvi-xaw; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-xelatex-dev_package() {
+	depends="${sourcepkg}"
+	short_desc="""xelatex-dev"
+	pkg_install() {
+		for _file in xelatex-dev; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-xetex_package() {
+	depends="${sourcepkg} teckit"
+	short_desc="Extended variant of TeX for use with Unicode sources"
+	pkg_install() {
+		for _file in xelatex xetex; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-xindex_package() {
+	depends="${sourcepkg}"
+	short_desc="Unicode compatible index generation"
+	pkg_install() {
+		for _file in xindex; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-xindy_package() {
+	depends="${sourcepkg} clisp"
+	short_desc="General-purpose index processor"
+	pkg_install() {
+		for _file in tex2xindy texindy xindy xindy.mem; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-xmltex_package() {
+	depends="${sourcepkg}-pdftex"
+	short_desc="Support for parsing XML documents"
+	pkg_install() {
+		for _file in pdfxmltex xmltex; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-xpdfopen_package() {
+	depends="${sourcepkg}"
+	short_desc="Commands to control PDF readers, under X11"
+	pkg_install() {
+		for _file in pdfclose pdfopen; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-yplan_package() {
+	depends="${sourcepkg}"
+	short_desc="Daily planner type calendar"
+	pkg_install() {
+		for _file in yplan; do
+			vmove "${_execdir}/${_file}"
+			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
+			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
+		done
+	}
+}
+
+texlive2020-exec-texworks_package() {
+	depends="texworks"
+	short_desc="Friendly cross-platform front end"
+	build_style=meta
+}

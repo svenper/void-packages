@@ -1,0 +1,114 @@
+# Template file for 'texlive2020-tlmgr'
+pkgname=texlive2020-tlmgr
+version=2020
+revision=1
+create_wrksrc=yes
+depends="$(vopt_if nativebin "texlive${version}-exec-scheme-$(
+		vopt_if infraonly infraonly;
+		vopt_if minimal   minimal;
+		vopt_if basic     basic;
+		vopt_if small     small;
+		vopt_if medium    medium;
+		vopt_if full      full;
+	)" "cairo pixman graphite gd poppler libsigsegv zziplib libpng
+	    libjpeg-turbo freetype icu harfbuzz wget perl ghostscript xz"
+)"
+short_desc="TeX Live distribution through tl-install, with native binaries"
+maintainer="Leah Neukirchen <leah@vuxu.org>"
+license="GPL-2"
+homepage="http://tug.org/texlive/"
+changelog="http://tug.org/texlive/doc/texlive-en/texlive-en.html#news"
+distfiles="ftp://ftp.tug.org/texlive/historic/${version}/install-tl-unx.tar.gz"
+checksum=7c90a50e55533d57170cbc7c0370a010019946eb18570282948e1af6f809382d
+provides="texlive${version}-bin-${version}_${revision}"
+replaces="texlive${version}-bin>=0"
+
+build_options="infraonly minimal basic small medium full nativebin doc fmt letter portable src write18"
+build_options_default="basic nativebin doc fmt src write18"
+desc_option_infraonly="Infrastructure-only installation scheme (no TeX at all)"
+desc_option_minimal="Minimal installation scheme (plain only)"
+desc_option_basic="Basic installation scheme (plain and latex)"
+desc_option_small="Small installation scheme (basic + xetex, metapost, a few languages)"
+desc_option_medium="Medium installation scheme (small + more packages and languages)"
+desc_option_full="Full installation scheme (everything)"
+desc_option_nativebin="Install native binaries"
+desc_option_doc="Install font/macro doc tree"
+desc_option_fmt="Create format files"
+desc_option_letter="Use letter size instead of A4 by default"
+desc_option_portable="Set up for portable installation"
+desc_option_src="Install font/macro source tree"
+desc_option_write18="Allow execution of restricted list of programs"
+
+vopt_conflict infraonly	minimal
+vopt_conflict infraonly	basic
+vopt_conflict infraonly	small
+vopt_conflict infraonly	medium
+vopt_conflict infraonly	full
+vopt_conflict minimal	basic
+vopt_conflict minimal	small
+vopt_conflict minimal	medium
+vopt_conflict minimal	full
+vopt_conflict basic	small
+vopt_conflict basic	medium
+vopt_conflict basic	full
+vopt_conflict small	medium
+vopt_conflict small	full
+vopt_conflict medium	full
+
+alternatives="texlive:texlive.sh:/etc/profile.d/texlive.sh.${version}"
+
+pre_install() {
+	rm -rf	${wrksrc}/install-tl*/tlpkg/installer/xz \
+		${wrksrc}/install-tl*/tlpkg/installer/wget
+}
+
+do_install() {
+	for FILE in INSTALL{,.msg} REMOVE; do
+		cp ${XBPS_SRCPKGDIR}/${pkgname}/${FILE}{.in,}
+	done
+
+	vmkdir opt/texlive${version}-installer
+	vcopy "install-tl-*/*" /opt/texlive${version}-installer
+	vinstall ${FILESDIR}/void.profile 644 opt/texlive${version}-installer
+	if [ ${build_option_nativebin} ]; then
+		vmkdir opt/texlive/${version}/bin
+		ln -s xbps ${DESTDIR}/opt/texlive/${version}/bin/custom
+	fi
+	echo "selected_scheme scheme-$( vopt_if infraonly	infraonly;
+					vopt_if minimal		minimal;
+					vopt_if basic		basic;
+					vopt_if small		small;
+					vopt_if medium		medium;
+					vopt_if full		full)" \
+		>> ${DESTDIR}/opt/texlive${version}-installer/void.profile
+	# The destructive default behavior of '-custom-bin' is remedied in a patch.
+	sed -i	-e "s:@@NATIVEBIN@@:$(vopt_if nativebin '-custom-bin=/var/empty'):g" \
+		${XBPS_SRCPKGDIR}/${pkgname}/INSTALL
+	sed -i	-e "s/@@ARCH@@/xbps/g" \
+		-e "s/@@VERSION@@/${version}/g" \
+		-e "s/@@PKGNAME@@/${pkgname}/g" \
+		${XBPS_SRCPKGDIR}/${pkgname}/INSTALL.msg
+	sed -i	-e "s/@@VERSION@@/${version}/g" \
+		-e "s/@@DOC@@/$(vopt_if doc 1 0)/g" \
+		-e "s/@@FMT@@/$(vopt_if fmt 1 0)/g" \
+		-e "s/@@LETTER@@/$(vopt_if letter 1 0)/g" \
+		-e "s/@@SRC@@/$(vopt_if src 1 0)/g" \
+		-e "s/@@WRITE18@@/$(vopt_if write18 1 0)/g" \
+		-e "s/@@PORTABLE@@/$(vopt_if portable 1 0)/g" \
+		$(vopt_if portable '-e /TEXMFHOME/s/~.*/\$TEXMFLOCAL/') \
+		$(vopt_if portable '-e /TEXMFCONFIG/s/~.*/\$TEXMFSYSCONFIG/') \
+		$(vopt_if portable '-e /TEXMFVAR/s/~.*/\$TEXMFSYSVAR/') \
+		${DESTDIR}/opt/texlive${version}-installer/void.profile
+	vmkdir etc/profile.d
+	sed	-e "s/@@ARCH@@/xbps/" \
+		-e "s/@@VERSION@@/${version}/" \
+		${FILESDIR}/texlive.sh >${DESTDIR}/etc/profile.d/texlive.sh.${version}
+	vlicense ${DESTDIR}/opt/texlive${version}-installer/LICENSE.CTAN
+	vlicense ${DESTDIR}/opt/texlive${version}-installer/LICENSE.TL
+}
+
+do_clean() {
+	for FILE in INSTALL{,.msg} REMOVE; do
+		rm ${XBPS_SRCPKGDIR}/${pkgname}/${FILE}
+	done
+}

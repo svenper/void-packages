@@ -1,0 +1,143 @@
+https://tug.org/pipermail/tlbuild/2018q3/004267.html
+
+--- texk/dvisvgm/dvisvgm-src/libs/defs.am
++++ texk/dvisvgm/dvisvgm-src/libs/defs.am
+@@ -1,19 +1,19 @@
+ if !HAVE_BROTLI
+-BROTLI_CFLAGS += -I$(dvisvgm_srcdir)/libs/brotli/include
+-BROTLI_LIBS += ../libs/brotli/libbrotli.a
++BROTLI_CFLAGS += -I/usr/include/brotli
++BROTLI_LIBS += -lbrotlicommon -lbrotlidec -lbrotlienc
+ endif
+ 
+ if !HAVE_POTRACE
+-POTRACE_CFLAGS = -I$(dvisvgm_srcdir)/libs/potrace
+-POTRACE_LIBS = ../libs/potrace/libpotrace.a
++POTRACE_CFLAGS = -I/usr/include
++POTRACE_LIBS = -lpotrace
+ endif
+ 
+ if !HAVE_WOFF2
+-WOFF2_CFLAGS += -I$(dvisvgm_srcdir)/libs/woff2/include
+-WOFF2_LIBS += ../libs/woff2/libwoff2.a
++WOFF2_CFLAGS += -I/usr/include/woff2
++WOFF2_LIBS += -lwoff2common -lwoff2dec -lwoff2enc
+ endif
+ 
+ if !HAVE_XXHASH
+-XXHASH_CFLAGS = -I$(dvisvgm_srcdir)/libs/xxHash
+-XXHASH_LIBS = ../libs/xxHash/libxxhash.a
++XXHASH_CFLAGS = -I/usr/include
++XXHASH_LIBS = -lxxhash
+ endif
+--- texk/dvisvgm/dvisvgm-src/src/Makefile.am
++++ texk/dvisvgm/dvisvgm-src/src/Makefile.am
+@@ -17,28 +17,28 @@ dvisvgm_LDADD = \
+ 	$(noinst_LIBRARIES) \
+ 	optimizer/liboptimizer.a \
+ 	../libs/clipper/libclipper.a \
+-	$(POTRACE_LIBS) \
+-	$(XXHASH_LIBS)
++	-lpotrace \
++	-lxxhash
+ 
+ if ENABLE_WOFF
+ dvisvgm_LDADD += \
+-	../libs/ff-woff/libfontforge.a \
+-	$(WOFF2_LIBS) \
+-	$(BROTLI_LIBS)
++	-lfontforge \
++	-lwoff2enc -lwoff2dec -lwoff2common \
++	-lbrotlienc -lbrotlidec -lbrotlicommon
+ endif
+ 
+ if USE_BUNDLED_MD5
+ dvisvgm_LDADD += ../libs/md5/libmd5.a
+ else
+-dvisvgm_LDADD += $(LIBCRYPTO_LIBS)
++dvisvgm_LDADD += -lcrypto
+ endif
+ 
+ dvisvgm_LDADD += \
+ 	$(KPATHSEA_LIBS) \
+-	$(FREETYPE2_LIBS) \
+-	$(FONTFORGE_LIBS) \
+-	$(ZLIB_LIBS) \
+-	$(LIBGS_LIBS)
++	-lfreetype \
++	-lfontforge \
++	-lz \
++	-lgs
+ 
+ dvisvgm_DEPENDENCIES = $(noinst_LIBRARIES)
+ dvisvgm_DEPENDENCIES += $(KPATHSEA_DEPEND) $(ZLIB_DEPEND) $(FREETYPE2_DEPEND)
+@@ -205,9 +205,9 @@ AM_CXXFLAGS +=  \
+ 	$(WOFF2_CFLAGS)
+ 
+ if USE_BUNDLED_MD5
+-AM_CXXFLAGS += -I$(dvisvgm_srcdir)/libs/md5
++AM_CXXFLAGS += -I/usr/include/openssl
+ else
+-AM_CXXFLAGS += $(LIBCRYPTO_CFLAGS)
++AM_CXXFLAGS += -I/usr/include/openssl
+ endif
+ 
+ endif
+
+--- texk/dvisvgm/dvisvgm-src/src/Makefile.in
++++ texk/dvisvgm/dvisvgm-src/src/Makefile.in
+@@ -91,16 +91,16 @@ build_triplet = @build@
+ host_triplet = @host@
+ bin_PROGRAMS = dvisvgm$(EXEEXT)
+ @HAVE_BROTLI_FALSE@am__append_1 = -I$(dvisvgm_srcdir)/libs/brotli/include
+-@HAVE_BROTLI_FALSE@am__append_2 = ../libs/brotli/libbrotli.a
++@HAVE_BROTLI_FALSE@am__append_2 = -lbrotlicommon -lbrotlidec -lbrotlienc
+ @HAVE_WOFF2_FALSE@am__append_3 = -I$(dvisvgm_srcdir)/libs/woff2/include
+-@HAVE_WOFF2_FALSE@am__append_4 = ../libs/woff2/libwoff2.a
++@HAVE_WOFF2_FALSE@am__append_4 = -lwoff2common -lwoff2dec -lwoff2enc
+ @ENABLE_WOFF_TRUE@am__append_5 = \
+-@ENABLE_WOFF_TRUE@	../libs/ff-woff/libfontforge.a \
+-@ENABLE_WOFF_TRUE@	$(WOFF2_LIBS) \
+-@ENABLE_WOFF_TRUE@	$(BROTLI_LIBS)
++@ENABLE_WOFF_TRUE@	-lfontforge \
++@ENABLE_WOFF_TRUE@	-lwoff2common -lwoff2dec -lwoff2enc \
++@ENABLE_WOFF_TRUE@	-lbrotlicommon -lbrotlidec -lbrotlienc
+ 
+-@USE_BUNDLED_MD5_TRUE@am__append_6 = ../libs/md5/libmd5.a
+-@USE_BUNDLED_MD5_FALSE@am__append_7 = $(LIBCRYPTO_LIBS)
++@USE_BUNDLED_MD5_TRUE@am__append_6 = -lcrypto
++@USE_BUNDLED_MD5_FALSE@am__append_7 = -lcrypto
+ @ENABLE_WOFF_TRUE@am__append_8 = ffwrapper.c ffwrapper.h
+ @ENABLE_WOFF_TRUE@am__append_9 = \
+ @ENABLE_WOFF_TRUE@	-I$(dvisvgm_srcdir)/libs/ff-woff/fontforge \
+@@ -111,7 +111,7 @@ bin_PROGRAMS = dvisvgm$(EXEEXT)
+ @ENABLE_WOFF_TRUE@     $(BROTLI_CFLAGS) \
+ @ENABLE_WOFF_TRUE@     $(WOFF2_CFLAGS)
+
+-@ENABLE_WOFF_TRUE@@USE_BUNDLED_MD5_TRUE@am__append_12 = -I$(dvisvgm_srcdir)/libs/md5
++@ENABLE_WOFF_TRUE@@USE_BUNDLED_MD5_TRUE@am__append_12 = -I/usr/include/openssl
+ @ENABLE_WOFF_TRUE@@USE_BUNDLED_MD5_FALSE@am__append_13 = $(LIBCRYPTO_CFLAGS)
+ subdir = dvisvgm-src/src
+ ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
+@@ -595,15 +595,15 @@ dvisvgm_SOURCES = \
+        CommandLine.hpp \
+        dvisvgm.cpp
+
+-@HAVE_POTRACE_FALSE@POTRACE_CFLAGS = -I$(dvisvgm_srcdir)/libs/potrace
+-@HAVE_POTRACE_FALSE@POTRACE_LIBS = ../libs/potrace/libpotrace.a
++@HAVE_POTRACE_FALSE@POTRACE_CFLAGS = -I/usr/include
++@HAVE_POTRACE_FALSE@POTRACE_LIBS = -lpotrace
+ @HAVE_XXHASH_FALSE@XXHASH_CFLAGS = -I$(dvisvgm_srcdir)/libs/xxHash
+-@HAVE_XXHASH_FALSE@XXHASH_LIBS = ../libs/xxHash/libxxhash.a
++@HAVE_XXHASH_FALSE@XXHASH_LIBS = -lxxhash
+ dvisvgm_LDADD = $(noinst_LIBRARIES) optimizer/liboptimizer.a \
+-       ../libs/clipper/libclipper.a $(POTRACE_LIBS) $(XXHASH_LIBS) \
++       ../libs/clipper/libclipper.a -lpotrace -lxxhash \
+        $(am__append_5) $(am__append_6) $(am__append_7) \
+-       $(KPATHSEA_LIBS) $(FREETYPE2_LIBS) $(FONTFORGE_LIBS) \
+-       $(ZLIB_LIBS) $(LIBGS_LIBS)
++       $(KPATHSEA_LIBS) -lfreetype -lfontforge \
++       -lz -lgs
+ dvisvgm_DEPENDENCIES = $(noinst_LIBRARIES) $(KPATHSEA_DEPEND) \
+        $(ZLIB_DEPEND) $(FREETYPE2_DEPEND)
+ libdvisvgm_a_SOURCES = AGLTable.hpp BasicDVIReader.hpp \

@@ -1,0 +1,70 @@
+#!/bin/sh
+
+
+
+# TODO: For commands like `tlmgr install ...`, install those packages from
+#	xbps first so that any tlmgr post-install scripts can succeed.
+#	Only one command is possible, so if "install" exists, check
+#	everything else for pkgnames.
+#	Respect --dry-run.
+#	--with-doc, --with-src?
+#	check that filtered is not empty, then do not run xbps
+
+
+
+cd /tmp || exit 1
+
+YEAR="$(echo "${0}" | grep -Eo '\b[0-9]{4}\b')"
+TLPDB_INSTALLED="/opt/texlive/${YEAR}/tlpkg/texlive.tlpdb"
+TLPDB_AVAILABLE="${TLPDB_INSTALLED}".????????????????????????????????
+BASE_PKG="texlive${YEAR}-exec"
+REPO="--repository=/var/cache/xbps-src/binpkgs/texlive"
+
+XPKG_SED() {
+	# sed '/^.[^i*].\? /d;s/^...\? //;s/-[^- ]* .*//' # why did this break?
+	cut -d ' ' -f 2 | sed 's/-[^-]*$//g'
+}
+
+if		[ $(whoami) = root ] &&
+		echo "${@}" | grep -Eq '(^|[[:space:]])install($|[[:space:]])' &&
+		echo "${@}" | grep -Eqv '(^|[[:space:]])--dry-run($|[[:space:]])'; then
+	FILTERED=""
+	for UNFILTERED in "${@}"; do
+		if xbps-query ${REPO} --search ${BASE_PKG}-${UNFILTERED} | XPKG_SED | grep -q -e "${UNFILTERED}\$"; then
+			FILTERED="${FILTERED} ${BASE_PKG}-${UNFILTERED}"
+		fi
+	done
+	xbps-install ${REPO} --yes ${FILTERED}
+fi
+
+/opt/texlive/${YEAR}/bin/xbps/tlmgr-without-xbps-sync "${@}"
+
+GREP_PACKAGES() {
+	grep -Po '^depend \K.*(?=\.ARCH$)' ${1}
+}
+
+SED_PKGNAME() {
+	sed -E "s/^/${BASE_PKG}-/g"
+}
+
+IGNORE_BASIC() {
+	grep -E -v '-exec$|lib(kpathsea|ptexenc|synctex|texlua)'
+}
+
+GREP_PACKAGES "${TLPDB_INSTALLED}" | SED_PKGNAME > tlpdb_installed
+GREP_PACKAGES "${TLPDB_AVAILABLE}" | SED_PKGNAME > tlpdb_available
+
+xbps-query --search ${BASE_PKG} | XPKG_SED | IGNORE_BASIC > xbps_installed
+
+REMOVE_FILTERED="$(comm -13 tlpdb_installed xbps_installed)"
+INSTALL_FILTERED="$(comm -23 tlpdb_installed xbps_installed)"
+
+rm tlpdb_installed tlpdb_available xbps_installed
+
+if [ $(whoami) = root ] && [ -n "${REMOVE_FILTERED}" ]; then
+	xbps-remove --yes ${REMOVE_FILTERED}
+fi
+if [ $(whoami) = root ] && [ -n "${INSTALL_FILTERED}" ]; then
+	# TODO: remove repo when in official repo
+	xbps-install ${REPO} --yes ${INSTALL_FILTERED}
+fi

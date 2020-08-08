@@ -1,0 +1,2 @@
+site='https://tug.org/svn/texlive/tags'
+pattern='name="texlive-\K2020[^"]+(?=")'
