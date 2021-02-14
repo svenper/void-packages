@@ -1,12 +1,8 @@
 # Template file for 'texlive2020-exec'
 pkgname=texlive2020-exec
 version=2020.0
-revision=1
+revision=2
 _year="${version:0:4}"
-# these refer to the release version of poppler, not libpoppler
-_poppler_epdf_version="0.86.0"
-_poppler_src_version="0.83.0"
-_poppler_void_version="0.87.0"
 build_wrksrc="${XBPS_BUILDDIR}/${pkgname}-${version}/Work"
 build_style="gnu-configure"
 short_desc="Executables meant to be used with texlive${_year}-tlmgr"
@@ -15,8 +11,8 @@ license="GPL-2"
 homepage="http://tug.org/texlive/"
 changelog="https://raw.githubusercontent.com/TeX-Live/texlive-source/master/ChangeLog"
 # use official git mirror to enable cached distfile ( https://www.tug.org/texlive/doc/tlbuild.html#Continuous-integration )
-distfiles="https://github.com/TeX-Live/texlive-source/archive/tags/texlive-${version}.tar.gz"
-checksum=c41d1ffcadb44fc25a08e2f8ed26ecbd011190d94afc46fce1457c872d4b22b9
+distfiles="https://github.com/TeX-Live/texlive-source/archive/eeab7aeed3b11db7bf8005201bf04d87ded8d86f.tar.gz"
+checksum=ac4499bcf9322b0dd8bb346d3d26a4297d4b67debb87e3ad159b6a8cca272c09
 
 # not complete modularity yet, only the most troublesome for convenience
 build_options="asymptote dvisvgm xetex xindy"
@@ -54,10 +50,10 @@ configure_args+=" --with-system-libpaper"   ; makedepends+=" libpaper-devel"
 configure_args+=" --with-system-libpng"     ; makedepends+=" libpng-devel"
 configure_args+=" --with-system-mpfr"       ; makedepends+=" mpfr-devel"
 configure_args+=" --with-system-pixman"     ; makedepends+=" pixman-devel"
-configure_args+=" --with-system-poppler"    ; makedepends+=" poppler-devel>=${_poppler_void_version}_0"
+configure_args+=" --with-system-poppler"    ; makedepends+=" poppler-devel"
 configure_args+=" --with-system-potrace"    ; makedepends+=" potrace-devel"
 configure_args+=" --with-system-teckit"     ; makedepends+=" libteckit-devel"
-configure_args+=" --with-system-xpdf"       ; makedepends+=" xpdf"
+#configure_args+=" --with-system-xpdf"       ; makedepends+=" xpdf"
 configure_args+=" --with-system-zlib"       ; makedepends+=" zlib-devel"
 configure_args+=" --with-system-zziplib"    ; makedepends+=" zziplib-devel"
 configure_args+=" --with-x-dvi-toolkit=xaw" ; makedepends+=" libXaw-devel"
@@ -148,10 +144,8 @@ _lib_versions() {
 }
 
 post_extract() {
-	cp -r ${XBPS_BUILDDIR}/{texlive-source-tags-texlive-${version},${pkgname}-${version}}
+	cp -r ${XBPS_BUILDDIR}/{*texlive-*,${pkgname}-${version}}
 	cd ${wrksrc}
-	cp texk/web2c/pdftexdir/pdftoepdf{-poppler${_poppler_epdf_version},}.cc
-	cp texk/web2c/pdftexdir/pdftosrc{-poppler${_poppler_src_version},}.cc
 	mkdir -p Work
 	( # TODO: remove when fixed: https://tug.org/pipermail/tex-k/2019-August/003036.html
 		cp ${wrksrc}/texk/kpathsea/tests/cnfline.test{,.disable}
@@ -167,7 +161,6 @@ do_configure() {
 do_build() {
 
 	# TODO: automate the vopt_enable entries according to available build options, also in other places
-	POPPLER_VERSION="${_poppler_void_version}" \
 	DESTDIR="" \
 	TL_MAKE_FLAGS="${makejobs} \
 	${make_build_args}" \
@@ -385,7 +378,7 @@ texlive2020-exec-aleph_package() {
 	depends="${sourcepkg}"
 	short_desc="Extended TeX"
 	pkg_install() {
-		for _file in aleph lamed; do
+		for _file in aleph; do
 			vmove "${_execdir}/${_file}"
 			if [ -f /usr/share/man/man1/${_file}.1 ]; then vman "/usr/share/man/man1/${_file}.1"; fi
 			if [ -f /usr/share/man/man5/${_file}.5 ]; then vman "/usr/share/man/man5/${_file}.5"; fi
